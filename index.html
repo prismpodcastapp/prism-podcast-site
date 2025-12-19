@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth" style="scroll-padding-top: 5rem;">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,13 +11,13 @@
     <meta property="og:description" content="The podcast player refined. Offline-first, no ads, built for listeners.">
     <meta property="og:type" content="website">
 
-    <!-- Favicon (Embedded SVG) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Cpath d='M20 20 H 80 C 102.091 20 120 37.9086 120 60 V 120 H 60 C 37.9086 120 20 102.091 20 80 V 20 Z' fill='%233B82F6'/%3E%3C/svg%3E">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Enables manual toggling
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -34,6 +34,21 @@
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'fade-up': 'fadeUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        fadeUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
@@ -43,22 +58,44 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .gradient-text {
-            background: linear-gradient(to right, #3B82F6, #93C5FD);
+            background: linear-gradient(to right, #3B82F6, #60A5FA);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        
+        /* Phone Frame CSS */
+        .phone-frame {
+            position: relative;
+            border-radius: 2.5rem;
+            border: 8px solid #1f1f22; /* Dark bezel */
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: #000;
+        }
+        
+        .dark .phone-frame {
+            border-color: #27272a;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Scroll Animation Utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
-<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-gray-300 antialiased selection:bg-brand-blue selection:text-white flex flex-col min-h-screen transition-colors duration-300">
+<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-gray-300 antialiased selection:bg-brand-blue selection:text-white flex flex-col min-h-screen transition-colors duration-300 overflow-x-hidden">
 
     <!-- Navigation -->
     <nav class="fixed w-full z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5 transition-colors duration-300">
-        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <!-- Prism Logo SVG -->
                 <svg width="24" height="24" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20 20 H 80 C 102.091 20 120 37.9086 120 60 V 120 H 60 C 37.9086 120 20 102.091 20 80 V 20 Z" fill="#3B82F6"/>
                 </svg>
@@ -66,193 +103,198 @@
             </div>
             
             <div class="flex items-center gap-6">
-                <!-- Desktop Menu -->
                 <div class="hidden md:flex gap-8 text-sm font-medium items-center">
                     <a href="#features" class="text-zinc-600 hover:text-brand-blue dark:text-gray-300 dark:hover:text-white transition">Features</a>
                     <a href="#roadmap" class="text-zinc-600 hover:text-brand-blue dark:text-gray-300 dark:hover:text-white transition">Roadmap</a>
-                    <a href="#download" class="text-brand-blue dark:text-brand-light font-semibold hover:text-brand-blue/80 dark:hover:text-white transition">Download</a>
                 </div>
 
-                <!-- Dark Mode Toggle Button -->
                 <button id="theme-toggle" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-gray-300">
-                    <!-- Sun Icon (for Dark Mode) -->
                     <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <!-- Moon Icon (for Light Mode) -->
                     <svg id="moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
-
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden text-zinc-600 dark:text-gray-300 hover:text-zinc-900 dark:hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
             </div>
-        </div>
-
-        <!-- Mobile Menu Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-white/5 absolute w-full px-6 py-4 flex flex-col gap-4 shadow-xl dark:shadow-none transition-colors duration-300">
-            <a href="#features" class="block py-2 text-zinc-600 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition" onclick="toggleMenu()">Features</a>
-            <a href="#roadmap" class="block py-2 text-zinc-600 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition" onclick="toggleMenu()">Roadmap</a>
-            <a href="#download" class="block py-2 text-brand-blue dark:text-brand-light font-bold" onclick="toggleMenu()">Download</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        <div class="max-w-6xl mx-auto px-6 text-center relative z-10">
-            <!-- Badge -->
-            <div class="inline-block px-3 py-1 mb-6 text-xs font-semibold tracking-wider text-brand-blue uppercase bg-brand-blue/10 rounded-full border border-brand-blue/20">
-                Now in Beta
+    <!-- Dynamic Hero Section -->
+    <section class="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden min-h-[90vh] flex items-center">
+        <!-- Background Blob -->
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-blue/20 rounded-full blur-[120px] -z-10 animate-float-delayed"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] -z-10 animate-float"></div>
+
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+            
+            <!-- Hero Text -->
+            <div class="text-center lg:text-left z-10 reveal active">
+                <div class="inline-flex items-center gap-2 px-4 py-2 mb-8 text-xs font-semibold tracking-wider text-brand-blue uppercase bg-brand-blue/10 rounded-full border border-brand-blue/20">
+                    <span class="w-2 h-2 rounded-full bg-brand-blue animate-pulse"></span>
+                    Now in Open Beta
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6 leading-tight">
+                    Audio, <br>
+                    <span class="gradient-text">Uninterrupted.</span>
+                </h1>
+                
+                <p class="text-lg text-zinc-600 dark:text-gray-400 max-w-xl mx-auto lg:mx-0 mb-10 leading-relaxed">
+                    Prism is the podcast player that gets out of your way. 
+                    No social feeds, no algorithm, no ads. Just a beautifully crafted offline-first experience for Android.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a href="#" class="flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-8 py-4 rounded-full font-bold hover:bg-[#01875f] dark:hover:bg-[#01875f] hover:text-white dark:hover:text-white transition transform hover:-translate-y-1 shadow-xl">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
+                        Get on Google Play
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hero Visual Composition -->
+            <div class="relative h-[600px] w-full hidden lg:block perspective-1000">
+                <!-- Phone 1 (Back/Left) -->
+                <div class="absolute top-10 left-0 w-64 phone-frame transform -rotate-6 scale-90 opacity-80 animate-float-delayed z-0 transition hover:z-20 hover:scale-100 hover:opacity-100">
+                    <img src="Downloads.jpeg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Downloads';" alt="Downloads Screen" class="w-full h-auto">
+                </div>
+                <!-- Phone 2 (Back/Right) -->
+                <div class="absolute top-20 right-0 w-64 phone-frame transform rotate-12 scale-90 opacity-80 animate-float z-0 transition hover:z-20 hover:scale-100 hover:opacity-100">
+                    <img src="Search.jpeg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Search';" alt="Search Screen" class="w-full h-auto">
+                </div>
+                <!-- Phone 3 (Center/Front) -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-72 phone-frame transform shadow-2xl z-10 animate-float hover:scale-105 transition">
+                    <img src="Playing.jpg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Playing';" alt="Now Playing Screen" class="w-full h-auto">
+                </div>
             </div>
             
-            <h1 class="text-5xl md:text-7xl font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6">
-                The Podcast Player <br>
-                <span class="gradient-text">Refined.</span>
-            </h1>
-            <p class="text-lg md:text-xl text-zinc-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                A minimal, offline-first podcast experience built for Android. 
-                <span class="text-zinc-900 dark:text-gray-200 font-medium">No ads. No subscriptions.</span> 
-                Just the content you love, completely distraction-free.
-            </p>
-            
-            <div class="flex flex-col sm:flex-row gap-4 justify-center" id="download">
-                <!-- Google Play Button -->
-                <a href="#" class="flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-8 py-4 rounded-full font-bold hover:bg-[#01875f] dark:hover:bg-[#01875f] hover:text-white dark:hover:text-white transition transform hover:-translate-y-1 shadow-lg shadow-zinc-900/10 dark:shadow-white/10">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
-                    Get on Google Play
-                </a>
-                <div class="flex items-center justify-center gap-3 border border-zinc-200 dark:border-white/10 text-zinc-400 dark:text-white/60 px-8 py-4 rounded-full font-bold cursor-not-allowed select-none bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 transition">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.24.41-2.35 1.05-3.11z"/></svg>
-                    iOS Coming Later
-                </div>
-            </div>
-        </div>
-
-        <!-- Abstract visual background elements -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-blue/10 dark:bg-brand-blue/20 rounded-full blur-[120px] -z-10 opacity-30 pointer-events-none"></div>
-    </section>
-
-    <!-- App Screenshots -->
-    <section class="py-12 overflow-hidden bg-white dark:bg-zinc-950 transition-colors duration-300">
-        <div class="max-w-6xl mx-auto px-6">
-            <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 text-center">A Look Inside</h2>
-            
-            <div class="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory no-scrollbar justify-start md:justify-center">
-                <!-- Image 1: Homepage -->
-                <div class="snap-center shrink-0">
-                    <img src="Homepage.jpeg" alt="Prism Podcast Homepage" class="h-[500px] w-auto rounded-[2rem] shadow-2xl border-4 border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
-                </div>
-                <!-- Image 2: Search -->
-                <div class="snap-center shrink-0">
-                    <img src="Search.jpeg" alt="Prism Podcast Search Interface" class="h-[500px] w-auto rounded-[2rem] shadow-2xl border-4 border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
-                </div>
-                <!-- Image 3: Downloads -->
-                <div class="snap-center shrink-0">
-                    <img src="Downloads.jpeg" alt="Prism Podcast Downloads Library" class="h-[500px] w-auto rounded-[2rem] shadow-2xl border-4 border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
-                </div>
-                <!-- Image 4: Playing -->
-                <div class="snap-center shrink-0">
-                    <img src="Playing.jpg" alt="Prism Podcast Now Playing Screen" class="h-[500px] w-auto rounded-[2rem] shadow-2xl border-4 border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
+            <!-- Mobile visual fallback -->
+            <div class="lg:hidden flex justify-center reveal">
+                 <div class="w-64 phone-frame transform rotate-3">
+                    <img src="Playing.jpg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Playing';" alt="Now Playing Screen" class="w-full h-auto">
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Grid -->
-    <section id="features" class="py-20 bg-zinc-50 dark:bg-zinc-900/50 transition-colors duration-300">
-        <div class="max-w-6xl mx-auto px-6">
-            <h2 class="text-3xl font-bold text-zinc-900 dark:text-white mb-12 text-center">Engineered for Listeners</h2>
+    <!-- Detailed Feature Section (Zig-Zag Layout) -->
+    <div id="features" class="bg-zinc-50 dark:bg-zinc-900/30 py-24 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-6 space-y-32">
             
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Feature 1 -->
-                <div class="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 hover:border-brand-blue/30 transition duration-300 group shadow-sm dark:shadow-none">
-                    <div class="w-12 h-12 bg-zinc-100 dark:bg-zinc-900 group-hover:bg-brand-blue/10 rounded-xl flex items-center justify-center mb-6 text-brand-blue transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+            <!-- Feature 1: Search -->
+            <section class="grid md:grid-cols-2 gap-12 items-center reveal">
+                <div class="order-2 md:order-1 flex justify-center md:justify-end">
+                    <div class="relative w-64 md:w-72 phone-frame transform -rotate-3 hover:rotate-0 transition duration-500 hover:scale-105">
+                        <div class="absolute inset-0 bg-brand-blue/20 blur-2xl -z-10"></div>
+                        <img src="Search.jpeg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Search';" alt="Search Interface" class="w-full h-full object-cover">
                     </div>
-                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-3">Offline First</h3>
-                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">Download your favorite episodes and listen anywhere. Your library is stored locally on your device, ensuring instant playback without buffering.</p>
                 </div>
-
-                <!-- Feature 2 -->
-                <div class="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 hover:border-brand-blue/30 transition duration-300 group shadow-sm dark:shadow-none">
-                    <div class="w-12 h-12 bg-zinc-100 dark:bg-zinc-900 group-hover:bg-brand-blue/10 rounded-xl flex items-center justify-center mb-6 text-brand-blue transition">
+                <div class="order-1 md:order-2 space-y-6">
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-brand-blue">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-3">Global Search</h3>
-                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">Powered by the iTunes API. Find virtually any podcast in the world instantly, complete with Top 25 charts by region.</p>
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Find Anything, Instantly.</h2>
+                    <p class="text-lg text-zinc-600 dark:text-gray-400 leading-relaxed">
+                        Powered by the iTunes API, Prism gives you access to virtually every podcast in existence. 
+                        Search by show name, author, or keywords. Browse curated "Top 25" charts for any country to discover your next obsession.
+                    </p>
                 </div>
+            </section>
 
-                <!-- Feature 3 -->
-                <div class="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 hover:border-brand-blue/30 transition duration-300 group shadow-sm dark:shadow-none">
-                    <div class="w-12 h-12 bg-zinc-100 dark:bg-zinc-900 group-hover:bg-brand-blue/10 rounded-xl flex items-center justify-center mb-6 text-brand-blue transition">
+            <!-- Feature 2: Offline -->
+            <section class="grid md:grid-cols-2 gap-12 items-center reveal">
+                <div class="space-y-6 md:text-right">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 ml-auto md:mr-0">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Built for the Commute.</h2>
+                    <p class="text-lg text-zinc-600 dark:text-gray-400 leading-relaxed">
+                        Prism is Offline-First by design. We manage your storage intelligently so your library is always ready when you step out the door.
+                        No buffering, no data usage on the go. Just hit play.
+                    </p>
+                </div>
+                <div class="flex justify-center md:justify-start relative">
+                    <div class="relative w-64 md:w-72 phone-frame transform rotate-3 hover:rotate-0 transition duration-500 hover:scale-105">
+                         <div class="absolute inset-0 bg-emerald-500/20 blur-2xl -z-10"></div>
+                         <img src="Downloads.jpeg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Downloads';" alt="Downloads Library" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature 3: Player -->
+            <section class="grid md:grid-cols-2 gap-12 items-center reveal">
+                <div class="order-2 md:order-1 flex justify-center md:justify-end">
+                    <div class="relative w-64 md:w-72 phone-frame transform -rotate-3 hover:rotate-0 transition duration-500 hover:scale-105">
+                        <div class="absolute inset-0 bg-purple-500/20 blur-2xl -z-10"></div>
+                        <img src="Playing.jpg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Playing';" alt="Player Interface" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="order-1 md:order-2 space-y-6">
+                     <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-3">Modern Audio Engine</h3>
-                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">Built on Media3 & ExoPlayer. Features variable speed playback, sleep timer, silence skipping, and system volume sync.</p>
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Modern Audio Engine.</h2>
+                    <p class="text-lg text-zinc-600 dark:text-gray-400 leading-relaxed">
+                        Built on top of Google's Media3 & ExoPlayer libraries. 
+                        Enjoy variable speed playback (0.5x to 3x), silence skipping, sleep timers, and perfect system volume integration.
+                    </p>
                 </div>
-
-                <!-- Feature 4 -->
-                <div class="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 hover:border-emerald-500/30 transition duration-300 relative overflow-hidden group shadow-sm dark:shadow-none">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                         <svg class="w-24 h-24 text-zinc-900 dark:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
-                    </div>
-                    <div class="w-12 h-12 bg-zinc-100 dark:bg-zinc-900 group-hover:bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 text-emerald-500 dark:text-emerald-400 transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-3">Zero Monetization*</h3>
-                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">We respect your wallet and your privacy. Prism has no ads, no locked features, and no data tracking. It is simply a tool for listening.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Roadmap / Coming Soon -->
-    <section id="roadmap" class="py-20 border-t border-zinc-200 dark:border-white/5 transition-colors duration-300">
-        <div class="max-w-4xl mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold text-zinc-900 dark:text-white mb-10">On the Roadmap</h2>
+            </section>
             
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- OPML Feature -->
-                <div class="bg-zinc-50 dark:bg-zinc-900/50 p-8 rounded-2xl border border-zinc-200 dark:border-white/5 text-left hover:border-brand-blue/30 transition group shadow-sm dark:shadow-none">
-                    <div class="flex items-center gap-3 mb-4">
-                         <div class="p-2 bg-white dark:bg-zinc-900 group-hover:bg-brand-blue/10 rounded-lg text-brand-blue transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                         </div>
-                         <h3 class="text-lg font-bold text-zinc-900 dark:text-white">OPML Import/Export</h3>
+             <!-- Feature 4: Zero Monetization -->
+            <section class="grid md:grid-cols-2 gap-12 items-center reveal">
+                <div class="space-y-6 md:text-right">
+                    <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-600 ml-auto md:mr-0">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                     </div>
-                    <p class="text-zinc-600 dark:text-gray-400 text-sm leading-relaxed">Seamlessly migrate your library. We are building tools to let you import your subscriptions from other apps or take your data with you whenever you want.</p>
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Zero Monetization.</h2>
+                    <p class="text-lg text-zinc-600 dark:text-gray-400 leading-relaxed">
+                        Prism is a passion project, not a startup. We have no investors to please and no ads to serve.
+                        Your listening habits are your business, not ours.
+                    </p>
                 </div>
+                <div class="flex justify-center md:justify-start relative">
+                    <div class="relative w-64 md:w-72 phone-frame transform rotate-3 hover:rotate-0 transition duration-500 hover:scale-105">
+                         <div class="absolute inset-0 bg-red-500/20 blur-2xl -z-10"></div>
+                         <img src="Homepage.jpeg" onerror="this.onerror=null; this.src='https://placehold.co/300x600?text=Homepage';" alt="Homepage Interface" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </section>
 
-                <!-- Patreon Feature -->
-                <div class="bg-zinc-50 dark:bg-zinc-900/50 p-8 rounded-2xl border border-zinc-200 dark:border-white/5 text-left hover:border-brand-blue/30 transition group shadow-sm dark:shadow-none">
-                    <div class="flex items-center gap-3 mb-4">
-                         <div class="p-2 bg-white dark:bg-zinc-900 group-hover:bg-brand-blue/10 rounded-lg text-brand-blue transition">
-                            <!-- Patreon Logo -->
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M0 .48v23.04h4.22V.48zm15.385 0c-4.764 0-8.641 3.88-8.641 8.65 0 4.755 3.877 8.623 8.641 8.623 4.75 0 8.615-3.868 8.615-8.623C24 4.36 20.136.48 15.385.48z"/>
-                            </svg>
-                         </div>
-                         <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Patreon Integration</h3>
-                    </div>
-                    <p class="text-zinc-600 dark:text-gray-400 text-sm leading-relaxed">Direct support for creators. You will be able to log in to your Patreon account and import your exclusive subscriber-only feeds directly into your Prism library.</p>
-                </div>
-            </div>
         </div>
-    </section>
-
-    <!-- Disclaimer -->
-    <div class="bg-white dark:bg-zinc-950 pb-6 text-center px-6 transition-colors duration-300">
-        <p class="text-xs text-zinc-400 dark:text-gray-600 italic">* (Note: Podcasts may still contain their own sponsor reads)</p>
     </div>
 
+    <!-- Roadmap -->
+    <section id="roadmap" class="py-24 bg-white dark:bg-zinc-950 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold text-zinc-900 dark:text-white mb-4">Coming Soon</h2>
+            <p class="text-zinc-500 dark:text-gray-400 mb-16">We are just getting started. Here is what we are building next.</p>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Card 1 -->
+                <div class="bg-zinc-50 dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-left hover:border-brand-blue transition duration-300 hover:shadow-xl reveal group">
+                    <div class="p-3 w-fit bg-white dark:bg-zinc-800 rounded-xl mb-4 group-hover:scale-110 transition">
+                         <svg class="w-6 h-6 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">OPML Import/Export</h3>
+                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">Seamlessly migrate your library from PocketCasts, Google Podcasts, or any other player.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-zinc-50 dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-left hover:border-brand-blue transition duration-300 hover:shadow-xl reveal group">
+                     <div class="p-3 w-fit bg-white dark:bg-zinc-800 rounded-xl mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-brand-blue" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M0 .48v23.04h4.22V.48zm15.385 0c-4.764 0-8.641 3.88-8.641 8.65 0 4.755 3.877 8.623 8.641 8.623 4.75 0 8.615-3.868 8.615-8.623C24 4.36 20.136.48 15.385.48z"/>
+                        </svg>
+                     </div>
+                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Patreon Integration</h3>
+                    <p class="text-zinc-600 dark:text-gray-400 leading-relaxed">Log in to Patreon to access your supporter-only audio feeds directly within Prism.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
-    <footer class="border-t border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950 py-12 mt-auto transition-colors duration-300">
+    <footer class="border-t border-zinc-200 dark:border-white/5 bg-zinc-50 dark:bg-zinc-950 py-12 transition-colors duration-300">
         <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg" class="opacity-50">
-                    <path d="M20 20 H 80 C 102.091 20 120 37.9086 120 60 V 120 H 60 C 37.9086 120 20 102.091 20 80 V 20 Z" fill="#3B82F6"/>
-                </svg>
                 <span class="text-zinc-500 dark:text-gray-500 text-sm">© 2025 Prism Podcast</span>
             </div>
             
@@ -269,46 +311,52 @@
 
     <!-- Scripts -->
     <script>
-        // Mobile Menu Toggle
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
-
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
-
-        function toggleMenu() {
-            menu.classList.add('hidden');
-        }
-
         // Dark Mode Logic
         const themeToggleBtn = document.getElementById('theme-toggle');
         const sunIcon = document.getElementById('sun-icon');
         const moonIcon = document.getElementById('moon-icon');
         const html = document.documentElement;
 
-        // Check LocalStorage or System Preference
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
-            sunIcon.classList.remove('hidden');
-        } else {
-            html.classList.remove('dark');
-            moonIcon.classList.remove('hidden');
+        function updateTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                html.classList.remove('dark');
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            }
         }
+        updateTheme();
 
-        // Toggle Event
         themeToggleBtn.addEventListener('click', () => {
             if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
                 localStorage.theme = 'light';
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
             } else {
-                html.classList.add('dark');
                 localStorage.theme = 'dark';
-                moonIcon.classList.add('hidden');
-                sunIcon.classList.remove('hidden');
             }
+            updateTheme();
+        });
+
+        // Scroll Animation Observer
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Only animate once
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
         });
     </script>
 </body>
